@@ -150,9 +150,9 @@ sub get_files
     {
         next if ($file eq "." or $file eq "..");
         next if ($file =~ /^\.mrkl_/);
-        print_verb("Found directory [$file]") if -d "$dir/$file";
         print_verb("Found symlink [$file]") if -l "$dir/$file";
-        print_verb("Found file [$file]") unless -d "$dir/$file" or -l "$dir/$file";
+        print_verb("Found directory [$file]") if -d "$dir/$file" and not -l "$dir/$file";
+        print_verb("Found file [$file]") unless (-d "$dir/$file" or -l "$dir/$file");
         push @file_list, $file;
     }
 
@@ -183,10 +183,11 @@ sub init_tree
     {
         my $fullfile = "$root_node/$file";
 
-        if (-d $fullfile)
+        if (-d $fullfile and not -l $fullfile)
         {
             # Don't hash the mtime or mode because then it'll look like this block changed when really 
             # a subdirectory changed. We only want to know if the directory name changed.
+            # mtime and mode will get pulled into that subdirectory's data block hash
             print_verb("Hashing directory name [$file] into data block hash");
             $block_hasher->add("$file");
 
@@ -319,7 +320,7 @@ sub update_tree
         foreach my $file (@$file_list)
         {
             my $fullfile = "$curr_dir/$file";
-            if (-d $fullfile)
+            if (-d $fullfile and not -l $fullfile)
             {
                 $chld_hash = get_node_hash("$fullfile");
                 return 0 unless $chld_hash;
@@ -395,7 +396,7 @@ sub compare_trees
     foreach my $file (@$file_list)
     {
         my $fullfile = "$local_node/$file";
-        if (-d $fullfile)
+        if (-d $fullfile and not -l $fullfile)
         {
             print_verb("$local_node -> $file");
             my $tmp_nodes = compare_trees("$local_node/$file", "$remote_node/$file");
