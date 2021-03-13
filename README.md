@@ -17,7 +17,10 @@ Each data block has an MD5 hash for the entire directory's contents. A directory
 mode, and mtime of normal files; the name and mode of symbolic links; and the name and mode of special files.
 
 The actual contents of files don't need to be hashed, assuming that users are not making changes to the files and then updating the mtime by "touch"ing the file
-afterwards. This makes generating the overall hash tree very efficient.
+afterwards. This makes generating the overall hash tree very efficient. 
+
+The ctime can be used instead of the mtime, but be aware that the ctime can't be used to compare directory trees across filesystems since the ctime is only
+consistent on the same filesystem. This should only be used for the use case where you want to determine if a change has been made in the directory structure.
 
 ### Child Node Hash
 Each directory also contains an MD5 hash that rolls up all of its descendent child node hashes and its own data block hash. For a directory, D, it will compute its

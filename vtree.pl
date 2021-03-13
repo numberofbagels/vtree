@@ -17,6 +17,7 @@ my $root;
 my $dry_run;
 my $verbose;
 my $pr_stats;
+my $use_ctime;
 
 my $block_hash_name = ".mrkl_block.md5";
 my $chld_hash_name = ".mrkl_child.md5";
@@ -32,6 +33,7 @@ GetOptions("compare=s" => \$compare_root,
            "dry-run"   => \$dry_run,
            "verbose"   => \$verbose,
            "statistics"   => \$pr_stats,
+           "ctime"   => \$use_ctime,
            "help"      => \$help);
 
 usage() and exit 0 if $help;
@@ -222,8 +224,15 @@ sub init_tree
         {
             @st = stat("$fullfile");
             return print_error("Unable to stat [$fullfile]") unless @st;
-            print_verb("Hashing filename [$file], mtime [" . $st[9] . "], and mode [" . $st[2] . "] into data block hash");
-            $block_hasher->add("$file" . $st[9] . $st[2]) || return print_error("Unable to add $fullfile hash to $root_node block hash");
+            if ($use_ctime)
+            {
+                print_verb("Hashing filename [$file], ctime [" . $st[10] . "], and mode [" . $st[2] . "] into data block hash");
+                $block_hasher->add("$file" . $st[10] . $st[2]) || return print_error("Unable to add $fullfile hash to $root_node block hash");
+            } else
+            {
+                print_verb("Hashing filename [$file], mtime [" . $st[9] . "], and mode [" . $st[2] . "] into data block hash");
+                $block_hasher->add("$file" . $st[9] . $st[2]) || return print_error("Unable to add $fullfile hash to $root_node block hash");
+            }
             $stats{'file_processed'}++;
         } else
         {
