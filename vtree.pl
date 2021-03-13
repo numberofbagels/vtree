@@ -150,9 +150,19 @@ sub get_files
     {
         next if ($file eq "." or $file eq "..");
         next if ($file =~ /^\.mrkl_/);
-        print_verb("Found symlink [$file]") if -l "$dir/$file";
-        print_verb("Found directory [$file]") if -d "$dir/$file" and not -l "$dir/$file";
-        print_verb("Found file [$file]") unless (-d "$dir/$file" or -l "$dir/$file");
+        if (-l "$dir/$file")
+        {
+            print_verb("Found symlink [$file]") 
+        } elsif (-d "$dir/$file" and not -l "$dir/$file")
+        {
+            print_verb("Found directory [$file]") 
+        } elsif (-f "$dir/$file")
+        {
+            print_verb("Found file [$file]") 
+        } else {
+            print_verb("Found special [$file]");
+        }
+
         push @file_list, $file;
     }
 
@@ -183,7 +193,14 @@ sub init_tree
     {
         my $fullfile = "$root_node/$file";
 
-        if (-d $fullfile and not -l $fullfile)
+        if (-l $fullfile)
+        {
+            @st = lstat("$fullfile");
+            return print_error("Unable to stat symlink [$fullfile]") unless @st;
+            print_verb("Hashing symlink [$file] and mode [" . $st[2] . "] into data block hash");
+            $block_hasher->add("$file" . $st[2]) || return print_error("Unable to add $fullfile hash to $root_node block hash");
+            $stats{'file_processed'}++;
+        } elsif (-d $fullfile)
         {
             # Don't hash the mtime or mode because then it'll look like this block changed when really 
             # a subdirectory changed. We only want to know if the directory name changed.
@@ -201,13 +218,20 @@ sub init_tree
             }
 
             $child_hasher->add($chld_node_hash) || return print_error("Unable to add $chld_node_hash to $root_node node hash");
-        } else
+        } elsif (-f $fullfile)
         {
-            @st = stat("$fullfile") unless -l $fullfile;
-            @st = lstat("$fullfile") if -l $fullfile;
+            @st = stat("$fullfile");
             return print_error("Unable to stat [$fullfile]") unless @st;
             print_verb("Hashing filename [$file], mtime [" . $st[9] . "], and mode [" . $st[2] . "] into data block hash");
             $block_hasher->add("$file" . $st[9] . $st[2]) || return print_error("Unable to add $fullfile hash to $root_node block hash");
+            $stats{'file_processed'}++;
+        } else
+        {
+            # Like a symlink, special files don't make sense to store mtime
+            @st = stat("$fullfile");
+            return print_error("Unable to stat special [$fullfile]") unless @st;
+            print_verb("Hashing special [$file] and mode [" . $st[2] . "] into data block hash");
+            $block_hasher->add("$file" . $st[2]) || return print_error("Unable to add $fullfile hash to $root_node block hash");
             $stats{'file_processed'}++;
         }
     }
