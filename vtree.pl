@@ -226,8 +226,8 @@ sub init_tree
             return print_error("Unable to stat [$fullfile]") unless @st;
             if ($use_ctime)
             {
-                print_verb("Hashing filename [$file], ctime [" . $st[10] . "], and mode [" . $st[2] . "] into data block hash");
-                $block_hasher->add("$file" . $st[10] . $st[2]) || return print_error("Unable to add $fullfile hash to $root_node block hash");
+                print_verb("Hashing filename [$file], mtime [" . $st[9] . "], ctime [" . $st[10] . "], and mode [" . $st[2] . "] into data block hash");
+                $block_hasher->add("$file" . $st[9] . $st[10] . $st[2]) || return print_error("Unable to add $fullfile hash to $root_node block hash");
             } else
             {
                 print_verb("Hashing filename [$file], mtime [" . $st[9] . "], and mode [" . $st[2] . "] into data block hash");
