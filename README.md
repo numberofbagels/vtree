@@ -19,8 +19,10 @@ mode, and mtime of normal files; the name and mode of symbolic links; and the na
 The actual contents of files don't need to be hashed, assuming that users are not making changes to the files and then updating the mtime by "touch"ing the file
 afterwards. This makes generating the overall hash tree very efficient. 
 
-The ctime can be used instead of the mtime, but be aware that the ctime can't be used to compare directory trees across filesystems since the ctime is only
-consistent on the same filesystem. This should only be used for the use case where you want to determine if a change has been made in the directory structure.
+The ctime can be used in addition to the mtime, but be aware that the ctime can't be used to compare directory trees across filesystems since the ctime is only
+consistent on the same filesystem. This should only be used for the use case where you want to determine if a change has been made in the directory structure and
+you need to track metadata only changes such as extended attributes, or if you're concerned that users will make changes and then alter the mtime to avoid
+the change being detected.
 
 ### Child Node Hash
 Each directory also contains an MD5 hash that rolls up all of its descendent child node hashes and its own data block hash. For a directory, D, it will compute its

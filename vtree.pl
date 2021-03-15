@@ -477,6 +477,10 @@ sub usage
     print "    --dry-run        Don't actually make changes, just say what would have happened.\n";
     print "    --verbose        Print out details about what's going on.\n";
     print "    --statistics     Print out statistics about the runtime to STDERR.\n";
+    print "    --ctime          Hash file ctime in addition to mtime for the data block hash. This can\n";
+    print "                     be helpful to identify metadata only changes, such as extended attributes,\n";
+    print "                     but can't be used for comparisons of the same tree on two different filesystems\n";
+    print "                     since the ctime will always differ.\n";
 
     return 1;
 }
